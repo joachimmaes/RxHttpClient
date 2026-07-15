@@ -14,7 +14,20 @@ val ScalaBuildOptions = Seq("-unchecked",
                             "-target:jvm-1.8")
 
 
-val asyncClient = "org.asynchttpclient" % "async-http-client" % "2.12.1"
+val asyncClient = "org.asynchttpclient" % "async-http-client" % "2.16.0"
+
+// Pin Netty above the 4.1.133.Final that async-http-client 2.16.0 pulls in:
+// 4.1.135+ fixes GHSA-hvcg-qmg6-jm4c (netty-codec-http) and GHSA-3qp7-7mw8-wx86 (netty-handler).
+// The native transports carry the same classifiers AHC declares: the classifier is part
+// of Maven's conflict key, so unclassified pins would leave the 4.1.133 native jars in
+// downstream dependency graphs.
+val nettyVersion = "4.1.136.Final"
+val nettyCodecHttp = "io.netty" % "netty-codec-http" % nettyVersion
+val nettyCodecSocks = "io.netty" % "netty-codec-socks" % nettyVersion
+val nettyHandler = "io.netty" % "netty-handler" % nettyVersion
+val nettyHandlerProxy = "io.netty" % "netty-handler-proxy" % nettyVersion
+val nettyNativeEpoll = ("io.netty" % "netty-transport-native-epoll" % nettyVersion).classifier("linux-x86_64")
+val nettyNativeKqueue = ("io.netty" % "netty-transport-native-kqueue" % nettyVersion).classifier("osx-x86_64")
 
 val rxStreamsVersion = "1.0.3"
 val rxJavaVersion = "3.1.5"
@@ -23,7 +36,9 @@ val fs2Version = "2.2.2"
 
 val slf4j = "org.slf4j" % "slf4j-api" % "1.7.30"
 val commonsCodec = "commons-codec" % "commons-codec" % "1.10"
-val json = "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.3" % "provided"
+val json = "com.fasterxml.jackson.core" % "jackson-databind" % "2.22.1" % "provided"
+val jsonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.22.1" % "provided"
+val jsonAnnotations = "com.fasterxml.jackson.core" % "jackson-annotations" % "2.22" % "provided"
 val rx = "org.reactivestreams" % "reactive-streams" % rxStreamsVersion
 val reactorAdapter = "io.projectreactor.addons" % "reactor-adapter" % reactorVersion
 val reactorTest = "io.projectreactor" % "reactor-test" % reactorVersion % "test"
@@ -41,7 +56,15 @@ val commonDependencies = Seq(
   asyncClient,
   slf4j,
   commonsCodec,
-  json
+  json,
+  jsonCore,
+  jsonAnnotations,
+  nettyCodecHttp,
+  nettyCodecSocks,
+  nettyHandler,
+  nettyHandlerProxy,
+  nettyNativeEpoll,
+  nettyNativeKqueue
 )
 
 val rxJavaDependencies = Seq(

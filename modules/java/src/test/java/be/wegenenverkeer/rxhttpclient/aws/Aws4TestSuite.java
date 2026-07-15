@@ -47,6 +47,11 @@ public class Aws4TestSuite implements Iterable<Aws4TestCase> {
         return Stream.of(sourceDirectory.list((File dir, String name) -> name.endsWith(".req")))
                 //TODO -- remove this when PR #1601 is accepted in async upstream!!!
                 .filter(fn -> !fn.startsWith("get-vanilla-query-unreserved"))
+                //Netty >= 4.1.135 rejects header values with leading/trailing whitespace at
+                //request construction, so the untrimmed value in this vector can no longer be
+                //built, let alone signed. The new contract is covered by
+                //TestBuilder#testHeaderValueWithLeadingOrTrailingWhitespaceIsRejected.
+                .filter(fn -> !fn.startsWith("get-header-value-trim"))
                 .map(this::parseRequest).collect(Collectors.toList());
     }
 
